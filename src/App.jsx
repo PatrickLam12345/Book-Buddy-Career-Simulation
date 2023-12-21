@@ -1,20 +1,68 @@
-import { useState } from 'react'
-import bookLogo from './assets/books.png'
+import { useEffect } from "react";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
+import Navigations from "./components/Navigations";
+import Books from "./components/Books";
+import Account from "./components/Account";
+import Login from "./components/Login";
+import Register from "./components/Register";
+import Logout from "./components/Logout";
+import SingleBook from "./components/SingleBook";
+import axios from "axios";
+import { useDispatch } from "react-redux";
+import { setUser } from "./store/userSlice";
 
 function App() {
-  const [token, setToken] = useState(null)
+  const dispatch = useDispatch();
+  const router = createBrowserRouter([
+    {
+      path: "/",
+      element: <Navigations />,
+      children: [
+        {
+          index: true,
+          element: <Books />,
+        },
+        {
+          path: "/user/account",
+          element: <Account />,
+        },
+        {
+          path: "/login",
+          element: <Login />,
+        },
+        {
+          path: "/register",
+          element: <Register />,
+        },
+        {
+          path: "/logout",
+          element: <Logout />,
+        },
+        {
+          path: "/books/:bookId",
+          element: <SingleBook />,
+        },
+      ],
+    },
+  ]);
+  useEffect(() => {
+    const possiblyLogin = async () => {
+      const token = window.localStorage.getItem("token");
+      const response = await axios.get(
+        "https://fsa-book-buddy-b6e748d1380d.herokuapp.com/api/users/me",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
 
-  return (
-    <>
-      <h1><img id='logo-image' src={bookLogo}/>Library App</h1>
+      dispatch(setUser(response.data));
+    };
 
-      <p>Complete the React components needed to allow users to browse a library catalog, check out books, review their account, and return books that they've finished reading.</p>
-
-      <p>You may need to use the `token` in this top-level component in other components that need to know if a user has logged in or not.</p>
-
-      <p>Don't forget to set up React Router to navigate between the different views of your single page application!</p>
-    </>
-  )
+    possiblyLogin();
+  }, []);
+  return <RouterProvider router={router} />;
 }
 
-export default App
+export default App;
